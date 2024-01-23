@@ -1,0 +1,198 @@
+//
+//  ContentView.swift
+//  LoginScreen
+//
+//  Created by Federico on 13/11/2021.
+//
+
+import UIKit
+import SwiftUI
+struct ContentView: View {
+    @State private var username = ""
+    @State private var password = ""
+    @State private var wrongUsername: Float = 0
+    @State private var wrongPassword: Float  = 0
+    @State private var showingLoginScreen = false
+    @State private var isLoading = false // New state variable for loading indicator
+    var viewController: ViewController  // Add this line
+    
+    init(viewController: ViewController) {  // Add this initializer
+        self.viewController = viewController
+    }
+    
+    
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.blue
+                    .ignoresSafeArea()
+                Circle()
+                    .scale(1.7)
+                    .foregroundColor(.white.opacity(0.15))
+                Circle()
+                    .scale(1.35)
+                    .foregroundColor(.white)
+                
+                VStack {
+                    Text("Login")
+                        .font(.largeTitle)
+                        .bold()
+                        .foregroundColor(.black)
+                        .padding()
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Username")
+                            .padding()
+                            .foregroundColor(.black)// Customize label color if needed
+                        TextField("Username", text: $username)
+                            .padding()
+                            .frame(width: 300, height: 50)
+                            .background(Color.black.opacity(0.05))
+                            .cornerRadius(10)
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.red, lineWidth: CGFloat(wrongUsername)))
+                            .padding(.horizontal)
+                            .foregroundColor(.black)
+                            .autocapitalization(.none)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Password")
+                            .padding()
+                            .foregroundColor(.black) // Customize label color if needed
+                        SecureField("", text: $password)
+                            .padding()
+                            .foregroundColor(.black)
+                            .frame(width: 300, height: 50)
+                            .background(Color.black.opacity(0.05))
+                            .cornerRadius(10)
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.red, lineWidth: CGFloat(wrongPassword)))
+                            .padding(.horizontal)
+                            .autocapitalization(.none)
+                    }
+                    
+                    
+                    Button {
+                        isLoading = true // Start loading when the button is tapped
+                        viewController.authenticateUser(username: username, password: password,
+                                                        showError: { errorMessage in
+                            isLoading = false // Stop loading on error
+                            // Handle error display if needed
+                        },
+                                                        showLogin: { showLogin in
+                            isLoading = false // Stop loading on success
+                            showingLoginScreen = true
+                        })
+                    } label: {
+                        if isLoading {
+                            Text("")
+                                .foregroundColor(.white)
+                                .frame(width: 300, height: 50)
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                                .overlay(
+                                    Group {
+                                        if isLoading {
+                                            ProgressView() // Display loading indicator when isLoading is true
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                                .padding(.trailing, 16)
+                                        }
+                                    }
+                                )
+                        }else{
+                            Text("Login")
+                                .foregroundColor(.white)
+                                .frame(width: 300, height: 50)
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                               
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .frame(width: 300, height: 50)
+                    .background(Color.blue)
+                    .cornerRadius(10)
+                    .overlay(
+                                Group {
+                                    if isLoading {
+                                        ProgressView() // Display loading indicator when isLoading is true
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                            .padding(.trailing, 16)
+                                    }
+                                }
+                            )
+                    Button {
+                       
+                        viewController.authenticateUserGuest()
+                    } label: {
+                       
+                            Text("Guest")
+                                .foregroundColor(.white)
+                                .frame(width: 300, height: 50)
+                                .background(Color.black)
+                                .cornerRadius(10)
+                               
+                        
+                    }
+                    .foregroundColor(.white)
+                    .frame(width: 300, height: 50)
+                    .background(Color.black)
+                    .cornerRadius(10)
+                    
+                    
+                    NavigationLink(destination:SecondViewControllerRepresentable(isAuthenticated: $showingLoginScreen), isActive: $showingLoginScreen) {
+                        EmptyView()
+                    }
+                }
+            }.navigationBarHidden(true)
+        }
+    }
+    
+    
+    //abcdefg11
+    //rekabi.maryam@gmail.com
+    
+    class Coordinator: NSObject {
+        @Binding var isAuthenticated: Bool
+        
+        init(isAuthenticated: Binding<Bool>) {
+            _isAuthenticated = isAuthenticated
+        }
+        
+        @objc func presentNewViewController() {
+            // Handle presenting the view controller
+            print("HAMID")
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let newViewController = storyboard.instantiateViewController(withIdentifier: "NewViewControllerIdentifier")
+            newViewController.modalPresentationStyle = .fullScreen
+            
+            // Access the top-most view controller to present the new view controller
+            if let topViewController = UIApplication.shared.windows.first?.rootViewController {
+                topViewController.present(newViewController, animated: true, completion: nil)
+            }
+        }
+    }
+    struct SecondViewControllerRepresentable: UIViewControllerRepresentable {
+        @Binding var isAuthenticated: Bool
+        
+        func makeCoordinator() -> Coordinator {
+            return Coordinator(isAuthenticated: $isAuthenticated)
+        }
+        
+        func makeUIViewController(context: Context) -> UIViewController {
+            let coordinator = context.coordinator
+            let viewController = UIViewController()
+            
+            // Call the coordinator's method when the view appears
+            DispatchQueue.main.async {
+                coordinator.presentNewViewController()
+            }
+            
+            return viewController
+        }
+        
+        func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
+            // Update the view controller if needed
+        }
+    }
+}
